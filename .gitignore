@@ -1,0 +1,20 @@
+# Ignorar entornos virtuales
+venv/
+
+# Ignorar archivos de migración de bases de datos
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Archivos de configuración sensible
+.env
+
+# Ignorar archivos de logs
+*.log
+
+# Ignorar carpetas generadas por el editor
+.idea/
+.vscode/
+
+# Ignorar datos estáticos generados
+/static/
