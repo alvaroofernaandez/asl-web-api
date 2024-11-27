@@ -76,11 +76,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'asl-web-api',
+        'NAME': 'asl_web_api',
         'USER': 'root',
         'PASSWORD': 'admin',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '3310',
     }
 }
 
