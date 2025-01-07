@@ -2,4 +2,4 @@ djangorestframework
 djangorestframework-simplejwt
 django
 
-#pip install -r requirements.txt es lo que tienes que ejecutar para que funcione ¡IMPORTANTE!
+# pip install -r requirements.txt es lo que tienes que ejecutar para que funcione ¡IMPORTANTE!
