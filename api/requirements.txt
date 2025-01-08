@@ -1,5 +1,6 @@
 djangorestframework
 djangorestframework-simplejwt
 django
+Pillow
 
 # pip install -r requirements.txt es lo que tienes que ejecutar para que funcione ¡IMPORTANTE!
