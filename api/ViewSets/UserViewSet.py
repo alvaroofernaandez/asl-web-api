@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from ..Models.UserModel import User
 from ..Serializers.UserSerializer import UserSerializer
+from ..Models.ProyectoModel import Proyecto
+from ..Serializers.ProyectoSerializer import ProyectoSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -51,3 +53,55 @@ class UserViewSet(viewsets.ModelViewSet):
                 {'error': f'Error al crear el usuario: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    # Método para asignar a un usuario un proyecto
+    @action(detail=True, methods=['post'], url_path='asignar_proyecto')
+    def asignar_proyecto(self, request, pk=None):
+        # Obtenemos el usuario proporcionado por el pk
+        usuario = self.get_object()
+
+        # Obtenemos los parámetros de la solicitud correctamente
+        id_proyecto = request.data.get('id_proyecto', None)
+
+        # Comprobamos que el id_proyecto no este vacío
+        if not id_proyecto:
+            return Response(
+                {'error': 'El campo "id_proyecto" es obligatorio.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Comprobamos que el formato de el id es correcto
+            id_proyecto = int(id_proyecto)
+
+            # Obtenemos un proyecto con el id proporcionado
+            proyecto = Proyecto.objects.get(id=id_proyecto)
+
+            # Asignamos el proyecto a el usuario
+            usuario.proyectos.add(proyecto)
+
+
+            # Guardamos el usuario en la bbdd
+            usuario.save()
+
+            return Response(
+                {'exitoso': 'Proyecto asignado correctamente.'},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+        except ValueError:
+            return Response(
+                {'error': 'El ID del proyecto debe ser un número válido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Proyecto.DoesNotExist:
+            return Response(
+                {'error': 'El proyecto con el ID proporcionado no existe.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error inesperado: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
