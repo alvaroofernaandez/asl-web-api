@@ -105,3 +105,44 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    # Método para obtener todos los proyectos por usuario
+    @action(detail=False, methods=['get'])
+    def get_proyects_user(self, request):
+        # Obtenemos el id de el usuario desde el mismo endpoint
+        id_usuario = request.query_params.get('id_usuario', None)
+
+        if not id_usuario:
+            return Response(
+                {'error': 'El campo "id_usuario" es obligatorio.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Validamos el formato de el id de el usuario
+            id_usuario = int(id_usuario)
+
+            # Obtenemos el usuario
+            usuario = User.objects.get(id=id_usuario)
+
+            # Obtenemos los proyectos que se asocien con el usuario
+            proyectos = usuario.proyectos.all()
+
+            serializer = ProyectoSerializer(proyectos, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Manejo de errores específicos
+        except ValueError:
+            return Response(
+                {'error': 'El ID del usuario debe ser un número válido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'El usuario con el ID proporcionado no existe.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Error inesperado: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
