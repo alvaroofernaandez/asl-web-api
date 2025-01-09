@@ -128,7 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
             proyectos = usuario.proyectos.all()
 
             serializer = ProyectoSerializer(proyectos, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({'proyectos: ':serializer.data}, status=status.HTTP_200_OK)
 
         # Manejo de errores específicos
         except ValueError:
