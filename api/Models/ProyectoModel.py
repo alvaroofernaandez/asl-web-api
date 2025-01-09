@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from ..Models.UserModel import User
 
 # Función para validar que los participantes sean mayores que 0
 def validar_participantes(value):
@@ -12,7 +13,13 @@ class Proyecto(models.Model):
     imagen = models.ImageField(upload_to='imagenes/', blank=False, null=False)
     estado = models.CharField(blank=False, null=False, max_length=180)
     descripcion = models.TextField(blank=False, null=False) # Textfield acepta una mayor cantidad de texto
-    participantes = models.IntegerField(validators=[validar_participantes])  # Validamos participantes
+    participantes = models.IntegerField(validators=[validar_participantes])
+    '''
+        Creamos la relacion n:m entre usuarios y proyectos. A parte si estamos en el modelo de usuarios
+        y queremos obtener todos los proyectos relacionados con un usuario determinado tendríamos que hacer
+        usuarios.proyectos.all() y devuelve todos los proyectos relacionados con ese usuario.
+    '''
+    usuarios = models.ManyToManyField(User, related_name='proyectos')
 
     # Creamos una funcion para validar los campos y comprobar si están o no vacíos
     def clean(self):
