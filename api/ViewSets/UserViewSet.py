@@ -146,3 +146,31 @@ class UserViewSet(viewsets.ModelViewSet):
                 {'error': f'Error inesperado: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    # Endpoint para obtener los usuarios más recientes
+    @action(detail=False, methods=['get'])
+    def get_pageable_last_users(self, request):
+        cantidad_users = request.query_params.get('cantidad', 3)
+
+        try:
+            # Comprobamos que cantidad_users tiene el formato correcto
+            cantidad_users = int(cantidad_users)
+        except:
+            return Response(
+                {'error': 'Cantidad de users debe de ser de tipo entero'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más nuevos
+        usuarios_filtrados = (User.objects
+                              .all()
+                              .order_by('-date_joined')[:cantidad_users])
+
+        # Serializar los usuarios filtrados
+        serializer = self.get_serializer(usuarios_filtrados, many=True)
+
+        # Devolver los usuarios filtrados
+        return Response(
+            {'usuarios': serializer.data},
+            status=status.HTTP_200_OK
+        )
