@@ -1,7 +1,9 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from ..Models.UserModel import User
+from rest_framework_simplejwt.tokens import Token
+
+from ..models import User
 from ..Serializers.UserSerializer import UserSerializer
 from ..Models.ProyectoModel import Proyecto
 from ..Serializers.ProyectoSerializer import ProyectoSerializer
@@ -13,7 +15,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    # Metodo para obtener usuarios ordenados tanto por cantidad como por antiguedad
+    # Metodo para obtener usuarios ordenados tanto por cantidad como por antiguedad (de más nuevos a más antiguos)
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated]) # Esta linea permite comprobar si esta autenticado
     def get_pageable_users(self, request):
         cantidad_usuarios = request.query_params.get('cantidad', 3)  # Cantidad de usuarios por defecto es de 3
@@ -22,30 +24,39 @@ class UserViewSet(viewsets.ModelViewSet):
         except ValueError:
             cantidad_usuarios = 3  # Asignamos por defecto el valor de 3
 
-        usuarios_filtrados = User.objects.all().order_by('-id')[:cantidad_usuarios]
+        # Filtramos por los usuarios más nuevos
+        usuarios_filtrados = (User.objects.all()
+                                          .order_by('-id')[:cantidad_usuarios])
         serializer = UserSerializer(usuarios_filtrados, many=True)
         return Response(serializer.data)
 
     # Método para crear usuarios
     @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def create_user(self, request):
-        # Recogemos en el cuerpo de la solicitud los datos
-        nombre = request.data.get('nombre')
+        # Recogemos los datos del cuerpo de la solicitud
+        nombre = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
+        role = request.data.get('role', 'user')  # Asignamos el valor de 'user' si no se proporciona
 
-        # Validamos que los campos no están vacíos aunque el modelo ya lo incluye
+        # Validamos que los campos no están vacíos
         if not all([nombre, email, password]):
             return Response({'error': 'Todos los campos (nombre, email, password) son obligatorios.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+                        status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Creamos un nuevo usuario usando el serializer
+            # Creamos un nuevo usuario y asignamos el rol correspondiente
             user = User.objects.create(
-                nombre=nombre,
+                username=nombre,
                 email=email,
-                password=password
+                role=role,
             )
+
+            # Usamos el método set_password para asegurar que la contraseña se guarda de manera segura
+            user.set_password(password)
+
+            # Guardamos el usuario en la base de datos
+            user.save()
 
             return Response(
                 {'success': 'Usuario creado correctamente.', 'usuario': UserSerializer(user).data},
@@ -53,8 +64,8 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         except Exception as e:
             return Response(
-                {'error': f'Error al crear el usuario: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
+            {'error': f'Error al crear el usuario: {str(e)}'},
+                 status=status.HTTP_400_BAD_REQUEST
             )
 
     # Método para asignar a un usuario un proyecto
@@ -164,7 +175,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más nuevos
+        # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más antiguos
         usuarios_filtrados = (User.objects
                               .all()
                               .order_by('id')[:cantidad_users])

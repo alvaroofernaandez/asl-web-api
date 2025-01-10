@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from ..Models.UserModel import User
+from ..models import User
 
 # Función para validar que los participantes sean mayores que 0
 def validar_participantes(value):

@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from ..Models.UserModel import User
+from ..models import User
 
 class Evento(models.Model):
     id = models.AutoField(primary_key=True) # No haría falta

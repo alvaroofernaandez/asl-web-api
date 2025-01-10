@@ -1,0 +1,19 @@
+Para crear un admin de modo que pueda acceder a ciertos endpoint restringidor por administradores se tiene primero que
+acceder a la shell y hacer lo siguiente:
+
+>>> from api.models import User
+>>> user = User.objects.create_user(email="administrado@gmail.com", password="administrado", role="admin", is_active=True, is_staff=True)
+>>> user.save()
+
+ahora nos logeamos en el siguiente endpoint
+
+http://localhost:8000/api/token/
+
+y el cuerpo de la peticion sería:
+
+{
+    "email": "administrado@gmail.com",
+    "password": "administrado"
+}
+
+nos da el token que necesitamos y ya podríamos acceder a dichos endpoints
