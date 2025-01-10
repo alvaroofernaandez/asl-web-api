@@ -5,13 +5,16 @@ from ..Models.UserModel import User
 from ..Serializers.UserSerializer import UserSerializer
 from ..Models.ProyectoModel import Proyecto
 from ..Serializers.ProyectoSerializer import ProyectoSerializer
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.decorators import permission_classes
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
     # Metodo para obtener usuarios ordenados tanto por cantidad como por antiguedad
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated]) # Esta linea permite comprobar si esta autenticado
     def get_pageable_users(self, request):
         cantidad_usuarios = request.query_params.get('cantidad', 3)  # Cantidad de usuarios por defecto es de 3
         try:
@@ -24,7 +27,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     # Método para crear usuarios
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def create_user(self, request):
         # Recogemos en el cuerpo de la solicitud los datos
         nombre = request.data.get('nombre')
@@ -55,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
     # Método para asignar a un usuario un proyecto
-    @action(detail=True, methods=['post'], url_path='asignar_proyecto')
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def asignar_proyecto(self, request, pk=None):
         # Obtenemos el usuario proporcionado por el pk
         usuario = self.get_object()
@@ -106,7 +109,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
     # Método para obtener todos los proyectos por usuario
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def get_proyects_user(self, request):
         # Obtenemos el id de el usuario desde el mismo endpoint
         id_usuario = request.query_params.get('id_usuario', None)
@@ -148,8 +151,8 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
     # Endpoint para obtener los usuarios más recientes
-    @action(detail=False, methods=['get'])
-    def get_pageable_last_users(self, request):
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def get_pageable_first_users(self, request):
         cantidad_users = request.query_params.get('cantidad', 3)
 
         try:
@@ -164,7 +167,7 @@ class UserViewSet(viewsets.ModelViewSet):
         # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más nuevos
         usuarios_filtrados = (User.objects
                               .all()
-                              .order_by('-date_joined')[:cantidad_users])
+                              .order_by('id')[:cantidad_users])
 
         # Serializar los usuarios filtrados
         serializer = self.get_serializer(usuarios_filtrados, many=True)
