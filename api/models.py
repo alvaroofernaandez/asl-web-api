@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 
 
-
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
@@ -40,6 +39,8 @@ class User(AbstractBaseUser):
     email = models.EmailField(unique=True, blank=False, null=False)
     password = models.CharField(max_length=128, null=False, verbose_name="Contraseña")
     role = models.CharField(max_length=10, choices=ROLES, default=USER)
+    imagen = models.ImageField(upload_to='imagenes/',blank=True, null=True)
+    antiguedad = models.DateField(auto_now_add=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

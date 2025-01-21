@@ -26,7 +26,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Filtramos por los usuarios más nuevos
         usuarios_filtrados = (User.objects.all()
-                                          .order_by('-id')[:cantidad_usuarios])
+                                          .order_by('-antiguedad')[:cantidad_usuarios])
         serializer = UserSerializer(usuarios_filtrados, many=True)
         return Response(serializer.data)
 
@@ -178,7 +178,7 @@ class UserViewSet(viewsets.ModelViewSet):
         # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más antiguos
         usuarios_filtrados = (User.objects
                               .all()
-                              .order_by('id')[:cantidad_users])
+                              .order_by('antiguedad')[:cantidad_users])
 
         # Serializar los usuarios filtrados
         serializer = self.get_serializer(usuarios_filtrados, many=True)
@@ -188,3 +188,26 @@ class UserViewSet(viewsets.ModelViewSet):
             {'usuarios': serializer.data},
             status=status.HTTP_200_OK
         )
+
+    # Funcion para obtener los usuarios que tenemos en total
+    @action(detail=False, methods=['GET'])
+    def obtener_cantidad_users(self, request):
+        # Obtenemos los usuarios totales
+        usuarios_totales = User.objects.all().count()
+
+        # Obtenemos los usuarios con el rol de 'user'
+        usuarios_normales = User.objects.filter(role='user').count()
+
+        # Obtenemos los usuarios con el rol de 'admin'
+        usuarios_administradores = User.objects.filter(role='admin').count()
+
+        # Si deseas devolver estos valores en un diccionario como respuesta
+        return Response(
+            {
+                'usuarios_totales': usuarios_totales,
+                'usuarios_normales': usuarios_normales,
+                'usuarios_administradores': usuarios_administradores
+            },
+            status=status.HTTP_200_OK
+        )
+
