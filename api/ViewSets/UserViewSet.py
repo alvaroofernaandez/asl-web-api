@@ -26,12 +26,11 @@ class UserViewSet(viewsets.ModelViewSet):
             cantidad_usuarios = 3
 
         # Filtramos por los usuarios más nuevos
-<<<<<<< HEAD
-        usuarios_filtrados = (User.objects.all()
-                                          .order_by('-antiguedad')[:cantidad_usuarios])
-=======
+
+        usuarios_filtrados = (User.objects.all().order_by('-antiguedad')[:cantidad_usuarios])
+
         usuarios_filtrados = User.objects.all().order_by('-id')[:cantidad_usuarios]
->>>>>>> 25131bfc842bcef3781afdb7fd3eb226d999692f
+
         serializer = UserSerializer(usuarios_filtrados, many=True)
         return self.responses(serializer.data, status.HTTP_200_OK)
 
@@ -135,8 +134,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.responses({'error': 'Cantidad de users debe de ser de tipo entero'},
                                   status.HTTP_400_BAD_REQUEST)
 
-        # De el siguiente modo filtramos por la fecha de creacion de modo que obtendremos los usuarios más antiguos
-<<<<<<< HEAD
+
         usuarios_filtrados = (User.objects
                               .all()
                               .order_by('antiguedad')[:cantidad_users])
@@ -172,8 +170,4 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-=======
-        usuarios_filtrados = User.objects.all().order_by('id')[:cantidad_users]
-        serializer = self.get_serializer(usuarios_filtrados, many=True)
-        return self.responses({'usuarios': serializer.data}, status.HTTP_200_OK)
->>>>>>> 25131bfc842bcef3781afdb7fd3eb226d999692f
+
