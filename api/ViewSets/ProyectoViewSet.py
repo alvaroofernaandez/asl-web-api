@@ -17,6 +17,7 @@ class ProyectoViewSet(viewsets.ModelViewSet):
         Cuando ponemos detail = False, significa que vamos a tratar con un objeto por lo tanto vamos a necesitar de una
         pk que en principio es none ya que lo tenemos en los parametros de la funcion para prevenir errores
     '''
+
     @action(detail=True, methods=['post'], url_path='add-imagen-desde-directorio')
     def add_imagen_desde_directorio(self, request, pk=None):
         # Obtén el proyecto por su ID
@@ -41,5 +42,9 @@ class ProyectoViewSet(viewsets.ModelViewSet):
         proyecto.save()
 
         return Response({'status': 'Imagen añadida correctamente al proyecto.'}, status=status.HTTP_200_OK)
+
+
+
+
 
 

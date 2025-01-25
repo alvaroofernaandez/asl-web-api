@@ -7,17 +7,19 @@ from ..models import User
 from ..Serializers.UserSerializer import UserSerializer
 from ..Models.ProyectoModel import Proyecto
 from ..Serializers.ProyectoSerializer import ProyectoSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
+# from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from ..permissions import IsNormalUser, IsAdminUser
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
+    # Funcion para devolver Responses y ahorrar y limpiar el codigo
     def responses(self, respuesta, codigo_estado):
         return Response(respuesta, status=codigo_estado)
 
     # Metodo para obtener usuarios ordenados tanto por cantidad como por antiguedad (de más nuevos a más antiguos)
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsNormalUser])
     def get_pageable_users(self, request):
         cantidad_usuarios = request.query_params.get('cantidad', 3)
         try:
@@ -30,7 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserSerializer(usuarios_filtrados, many=True)
         return self.responses(serializer.data, status.HTTP_200_OK)
 
-    # Método para crear usuarios
+    # Método para crear usuarios normales no administradores
     @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def create_user(self, request):
         # Recogemos los datos del cuerpo de la solicitud
@@ -38,13 +40,19 @@ class UserViewSet(viewsets.ModelViewSet):
         email = request.data.get('email')
         password = request.data.get('password')
         role = request.data.get('role', 'user')
+        imagen = request.FILES.get('imagen',None)
 
         # Validamos que los campos no están vacíos
         if not all([nombre, email, password]):
             return self.responses({'error': 'Todos los campos (nombre, email, password) son obligatorios.'},status.HTTP_400_BAD_REQUEST)
         try:
             # Creamos un nuevo usuario y asignamos el rol correspondiente
-            user = User.objects.create(username=nombre, email=email, role=role)
+            user = User.objects.create(
+                username=nombre,
+                email=email,
+                role=role,
+                imagen=imagen
+            )
             user.set_password(password)
             user.save()
             return self.responses({'success': 'Usuario creado correctamente.', 'usuario': UserSerializer(user).data},
@@ -88,7 +96,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.responses({'error': f'Error inesperado: {str(e)}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Método para obtener todos los proyectos por usuario
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsNormalUser])
     def get_proyects_user(self, request):
         # Obtenemos el id de el usuario desde el mismo endpoint
         id_usuario = request.query_params.get('id_usuario', None)
@@ -119,7 +127,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return self.responses({'error': f'Error inesperado: {str(e)}'}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Endpoint para obtener los usuarios más recientes
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsNormalUser])
     def get_pageable_first_users(self, request):
         cantidad_users = request.query_params.get('cantidad', 3)
 
@@ -134,3 +142,4 @@ class UserViewSet(viewsets.ModelViewSet):
         usuarios_filtrados = User.objects.all().order_by('id')[:cantidad_users]
         serializer = self.get_serializer(usuarios_filtrados, many=True)
         return self.responses({'usuarios': serializer.data}, status.HTTP_200_OK)
+
