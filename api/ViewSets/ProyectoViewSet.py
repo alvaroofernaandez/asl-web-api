@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from config import settings
 from ..Models.ProyectoModel import Proyecto
 from ..Serializers.ProyectoSerializer import ProyectoSerializer
+from ..permissions import IsAdminUser
 
 class ProyectoViewSet(viewsets.ModelViewSet):
     queryset = Proyecto.objects.all()
@@ -43,8 +44,36 @@ class ProyectoViewSet(viewsets.ModelViewSet):
 
         return Response({'status': 'Imagen añadida correctamente al proyecto.'}, status=status.HTTP_200_OK)
 
+    # Funcion para crear un proyecto que esta capada para que solo los usuarios administradores puedan crear proyectos
+    @action(methods=['post'], detail=False,permission_classes=[IsAdminUser])
+    def create_proyect(self, request):
 
+        serializer = ProyectoSerializer(data=request.data)
+        if serializer.is_valid():
+            proyecto = serializer.save()
+            return Response({'status': 'Proyecto creado correctamente.', 'proyecto': ProyectoSerializer(proyecto).data},
+                            status=status.HTTP_201_CREATED)
 
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Funcion para obtener los 3 últimos proyectos
+    @action(methods=['get'], detail=False)
+    def get_last_proyects(self, request):
+        # Obtenemos los 3 últimos proyectos
+        proyectos = Proyecto.objects.all().order_by('-id')[:3]
+
+        serializer = ProyectoSerializer(proyectos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # Funcion para obtener los 3 primeros proyectos
+    @action(methods=['get'], detail=False)
+    def get_new_proyects(self, request):
+        # Obtenemos los 3 últimos proyectos
+        proyectos = Proyecto.objects.all().order_by('id')[:3]
+
+        serializer = ProyectoSerializer(proyectos, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
