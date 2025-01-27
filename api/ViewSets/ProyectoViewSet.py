@@ -1,4 +1,6 @@
 import os
+
+from django.db.models import Count
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -47,20 +49,24 @@ class ProyectoViewSet(viewsets.ModelViewSet):
     # Funcion para crear un proyecto que esta capada para que solo los usuarios administradores puedan crear proyectos
     @action(methods=['post'], detail=False,permission_classes=[IsAdminUser])
     def create_proyect(self, request):
-
+        # Pasamos a el serializer los datos de la request
         serializer = ProyectoSerializer(data=request.data)
+        # Comprobamos mediante el metodo is_valid si los datos introducidos por el usuario son correctos
         if serializer.is_valid():
+            # Guardamos el proyecto en la bbdd en caso de que sea correcto
             proyecto = serializer.save()
             return Response({'status': 'Proyecto creado correctamente.', 'proyecto': ProyectoSerializer(proyecto).data},
                             status=status.HTTP_201_CREATED)
 
+        # Devolvemos un mensaje de error en caso de que no se guarde en la bbdd es decir no tenga el formato correcto
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # Funcion para obtener los 3 últimos proyectos
     @action(methods=['get'], detail=False)
     def get_last_proyects(self, request):
         # Obtenemos los 3 últimos proyectos
-        proyectos = Proyecto.objects.all().order_by('-id')[:3]
+        proyectos = (Proyecto
+                     .objects.all()).order_by('-id')[:3]
 
         serializer = ProyectoSerializer(proyectos, many=True)
 
@@ -76,4 +82,22 @@ class ProyectoViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    '''
+        Si hay proyectos sin participantes, los mostraremos en en este endpoint segun los que son más antiguos y luego ir
+        filtrando por su capacidad.
+    '''
+    @action(methods=['get'],detail=False)
+    def get_empty_proyects(self,request):
+        proyectos = (Proyecto.objects.all()
+                         .annotate(num_usuarios=Count('usuarios'))
+                         .filter(num_usuarios=0)
+                         .order_by('id')
+                         .distinct()) # Utilizamos distinct para evitar duplicados
 
+        serializer = ProyectoSerializer(proyectos, many=True)
+
+        # Comprobamos si hay proyectos sin participantes
+        if proyectos is None:
+            return Response({'error':'No hay proyectos sin participantes'},status=status.HTTP_404_NOT_FOUND)
+
+        return Response({'proyectos sin usuarios: ':serializer.data},status=status.HTTP_200_OK)
